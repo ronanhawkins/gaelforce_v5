@@ -1,3 +1,4 @@
+#pragma once
 #include "pros/screen.hpp"
 #include "lemlib/api.hpp"
 #include <cmath>

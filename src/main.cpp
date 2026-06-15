@@ -3,15 +3,26 @@
 #include "gforce/gaelforce.hpp"
 
 namespace start_position {
-    constexpr float X = -42; // starting x position (-72 to 72) (inches), right is positive, left is negative
-    constexpr float Y = -60; // starting y position (-72 to 72) (inches), away is positive, closer is negative
-    constexpr float H = 0; // starting heading (-180 to 180) (degrees), 0 is facing away from driver, 90 is right
+    //left auton
+    float r_X = 0;
+    float r_Y = 0;
+    float r_H = 0;
+    //right auton
+    float l_X = 0;
+    float l_Y = 0;
+    float l_H = 0;
+    float s_X = 0;
+    float s_Y = 0;
+    float s_H = 0;
+    // starting x position (-72 to 72) (inches), right is positive, left is negative
+    // starting y position (-72 to 72) (inches), away is positive, closer is negative
+    // starting heading (-180 to 180) (degrees), 0 is facing away from
     //0,0,0 is center of field, facing away from driver
 }
 
 //initizalize function. This is the first function that runs when the program starts
 void initialize() {
-    pros::lcd::initialize(); // initialize brain screen
+    mode::runSelector();
     chassis.calibrate(); // calibrate sensors
 
     // thread to for brain screen and position logging
@@ -38,13 +49,30 @@ void disabled() {} //runs when robot is disabled
 
 //runs after initialize if connected to competition control
 void competition_initialize() {
-    chassis.setPose(start_position::X, start_position::Y, start_position::H); // set the robot's position
 }
 
 //auton
 void autonomous() {
-    //move to 0,0,90,timeout in 8000 milliseconds
-    chassis.moveToPose(0, 0, 90, 8000);
+    switch (mode::selected) {
+        case mode::Auton::MATCH_LEFT:  matchLeft();  break;
+        case mode::Auton::MATCH_RIGHT: matchRight(); break;
+        case mode::Auton::SKILLS:      skills();     break;
+    }
+}
+
+void matchLeft() {
+    chassis.setPose(start_position::l_X, start_position::l_Y, start_position::l_H);
+    chassis.moveToPose(0, 0, 0,8000); // move to the center of the field
+}
+
+void matchRight() {
+    chassis.setPose(start_position::r_X, start_position::r_Y, start_position::r_H);
+    chassis.moveToPose(0, 0, 0,8000); // move to the center of the field
+}
+
+void skills() {
+    chassis.setPose(start_position::s_X, start_position::s_Y, start_position::s_H);
+    chassis.moveToPose(0, 0, 0,8000); // move to the center of the field
 }
 
 //driver control
