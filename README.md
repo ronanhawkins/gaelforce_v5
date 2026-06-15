@@ -1,12 +1,17 @@
-###Gaelforce UCD
+# Gaelforce UCD
 
-This is the program for Gaelforce UCD Vex U Team<br>
+This is the program for the Gaelforce UCD VEX U team.
 
-/src<br>
-    main.cpp in source -> main code<br>
-    robot_config.cpp -> config robot motors and sensors<br>
-/include/gforce<br>
-    gaelforce.hpp -> include header<br>
-    robot_config.hpp -> config header<br>
-    brain_graphics/<br>
-        field_map.hpp -> display field map and robot location on screen functions<br>
+## Project Structure
+
+```
+src/
+├── main.cpp           # main code
+└── robot_config.cpp   # configures robot motors and sensors
+
+include/gforce/
+├── gaelforce.hpp      # main include header
+├── robot_config.hpp   # config header
+└── brain_graphics/
+    └── field_map.hpp  # displays field map + robot location on screen
+```
