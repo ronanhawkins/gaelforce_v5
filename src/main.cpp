@@ -3,42 +3,55 @@
 #include "gforce/gaelforce.hpp"
 
 namespace start_position {
-    //left auton
-    float r_X = 0;
-    float r_Y = 0;
-    float r_H = 0;
-    //right auton
+    // left auton
     float l_X = 0;
     float l_Y = 0;
     float l_H = 0;
+    // right auton
+    float r_X = 0;
+    float r_Y = 0;
+    float r_H = 0;
+    // skills
     float s_X = 0;
     float s_Y = 0;
     float s_H = 0;
     // starting x position (-72 to 72) (inches), right is positive, left is negative
     // starting y position (-72 to 72) (inches), away is positive, closer is negative
-    // starting heading (-180 to 180) (degrees), 0 is facing away from
-    //0,0,0 is center of field, facing away from driver
+    // starting heading (-180 to 180) (degrees), 0 is facing away from driver
+    // 0,0,0 is center of field, facing away from driver
 }
 
-//initizalize function. This is the first function that runs when the program starts
+// pause the screen task while the auton selector is active
+namespace {
+    volatile bool selectorActive = false;
+}
+
+// forward declarations for the routines called from autonomous()
+void matchLeft();
+void matchRight();
+void skills();
+
+// initialize function. This is the first function that runs when the program starts
 void initialize() {
-    mode::runSelector();
     chassis.calibrate(); // calibrate sensors
 
-    // thread to for brain screen and position logging
+    // thread for brain screen and position logging
     pros::Task screenTask([&]() {
         while (true) {
+            if (selectorActive) {
+                pros::delay(50);
+                continue;
+            }
             lemlib::Pose p = chassis.getPose();
 
-        	pros::screen::erase();          // clear whole screen
-        	map::drawField();                    // static field
-			map::drawRobot(p);
-			// live robot
-        	// numeric readout on the left side
-    		pros::screen::set_pen(pros::Color::white);
-    		pros::screen::print(pros::E_TEXT_MEDIUM, 1, "X: %.1f", p.x);
-        	pros::screen::print(pros::E_TEXT_MEDIUM, 2, "Y: %.1f", p.y);
-        	pros::screen::print(pros::E_TEXT_MEDIUM, 3, "H: %.1f", p.theta);
+            pros::screen::erase();          // clear whole screen
+            map::drawField();               // static field
+            map::drawRobot(p);              // live robot
+            // numeric readout on the left side
+            pros::screen::set_pen(pros::Color::white);
+            pros::screen::print(pros::E_TEXT_MEDIUM, 1, "X: %.1f", p.x);
+            pros::screen::print(pros::E_TEXT_MEDIUM, 2, "Y: %.1f", p.y);
+            pros::screen::print(pros::E_TEXT_MEDIUM, 3, "H: %.1f", p.theta);
             // delay to save resources
             pros::delay(50);
         }
@@ -49,6 +62,9 @@ void disabled() {} //runs when robot is disabled
 
 //runs after initialize if connected to competition control
 void competition_initialize() {
+    selectorActive = true;
+    mode::runSelector();
+    selectorActive = false;
 }
 
 //auton
