@@ -5,5 +5,5 @@
 extern pros:: MotorGroup leftMotors;
 extern pros:: MotorGroup rightMotors;
 extern lemlib::Chassis chassis;
-
+extern pros::Controller controller;
 //add other motors here, for example: extern pros::Motor armMotor;
