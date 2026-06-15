@@ -1,6 +1,6 @@
 # Gaelforce UCD
 
-This is the program for the Gaelforce UCD VEX U team.
+This is the base program for the Gaelforce UCD VEX U team.
 
 ## Project Structure
 
