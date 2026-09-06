@@ -48,10 +48,10 @@ gflib::DrivetrainConfig makeDrivetrainConfig() {
     gflib::DrivetrainConfig c;
 
     // [0,12] in Voltage
-    c.lateral.kP = 1_r;
+    c.lateral.kP = 1.0_r;
     c.lateral.kD = 0.3_r;
     c.angular.kP = 0.2_r;
-    c.angular.kD = 1_r;
+    c.angular.kD = 1.0_r;
 
     //tunable exit conditions
     // small band (in), time inside(ms), large band(in), time inside(ms), timeout(ms)
@@ -68,7 +68,7 @@ gflib::DrivetrainConfig makeDrivetrainConfig() {
 
     // joystick deadband, min output, expo blend (between linear and cubic)
     c.throttleCurve.deadband = 3.0_r;
-    c.throttleCurve.minVolts = 1_r;
+    c.throttleCurve.minVolts = 1.0_r;
     c.throttleCurve.expo = 0.0_r;
     c.turnCurve = c.throttleCurve;
 
@@ -84,5 +84,9 @@ namespace link {
 void service() {
     poseSource.update();
     statusHook.send();
+
+    // Same slice-time duties as the hook. Driver control never enters
+    // runMotion, so nothing else would refresh what the screen task reads
+    statusHook.publish();
 }
 }  // namespace link

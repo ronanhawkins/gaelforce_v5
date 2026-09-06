@@ -1,6 +1,6 @@
 #include "main.h"
+#include <cstdio>
 #include "gforce/gaelforce.hpp"
-#include "gflib/motion.hpp"
 
 namespace start_position {
     // left auton
@@ -37,25 +37,11 @@ namespace {
         }
     }
 
-    // Runs one motion and reports whether the routine may continue. 
-    // An abort stops the drivetrain and latches the reason; it never falls through
-    bool step(gflib::IMotion& m) {
-        const gflib::MotionStatus st = drivetrain.runMotion(m);
-        if (st == gflib::MotionStatus::Settled || st == gflib::MotionStatus::EarlyExit) return true;
-
-        drivetrain.stop();
-        fault = reasonFor(st);
-        return false;
-    }
-
-    // The pose belongs to the pod, so this is a request that can fail. A false
-    // return means we do not know where the robot is, which is a reason not to
-    // drive rather than something to log and continue past
-    bool seedPose(float x, float y, float h) {
-        if (drivetrain.setPose(x, y, h)) return true;
-        fault = "POSE SET NOT ACKNOWLEDGED";
-        return false;
-    }
+    // Running only while the robot is actually driving.
+    struct MotionWindow {
+        MotionWindow()  { statusHook.setMotionState(gflib::MotionState::Running); }
+        ~MotionWindow() { statusHook.setMotionState(gflib::MotionState::Idle); }
+    };
 }
 
 // forward declarations for the routines called from autonomous()
@@ -82,7 +68,9 @@ void initialize() {
                 pros::delay(50);
                 continue;
             }
-            gflib::Pose p = drivetrain.getPose();
+            // A copy, not the live objects
+            const hal::PoseSnapshot snap = hal::readSnapshot();
+            const gflib::Pose p = snap.pose;
 
             pros::screen::erase();          // clear whole screen
             map::drawField();               // static field
@@ -95,10 +83,9 @@ void initialize() {
 
             // Link health, because a stale pose looks exactly like a
             // stationary robot on a map
-            const uint32_t now = pros::millis();
-            pros::screen::print(pros::E_TEXT_MEDIUM, 4, "LINK: %s  age %lums",
-                                poseSource.healthy(now) ? "ok " : "BAD",
-                                static_cast<unsigned long>(poseSource.ageMs(now)));
+            pros::screen::print(pros::E_TEXT_MEDIUM, 4, "LINK: %s  age %lums", 
+                                snap.healthy ? "ok " : "BAD",
+                                static_cast<unsigned long>(snap.ageMs));
 
             if (fault != nullptr) {
                 pros::screen::set_pen(pros::Color::red);
@@ -121,8 +108,8 @@ void competition_initialize() {
 
 //auton
 void autonomous() {
+    drivetrain.clearFault();
     fault = nullptr;
-    statusHook.setMotionState(gflib::MotionState::Running);
 
     switch (mode::selected) {
         case mode::Auton::MATCH_LEFT:  matchLeft();  break;
@@ -130,28 +117,42 @@ void autonomous() {
         case mode::Auton::SKILLS:      skills();     break;
     }
 
-    statusHook.setMotionState(gflib::MotionState::Idle);
+    //check for fault
+    if (drivetrain.faulted()) {
+        static char buf[64];
+        const uint32_t at = drivetrain.faultedAtMotion();
+        const char* why = reasonFor(drivetrain.faultStatus());
+
+        // 0 means the fault came from setPose, before any motion ran
+        if (at == 0) std::snprintf(buf, sizeof(buf), "%s (pose set)", why);
+        else         std::snprintf(buf, sizeof(buf), "%s at motion %lu",
+                                   why, static_cast<unsigned long>(at));
+        fault = buf;
+    }
 }
 
 namespace {
 using gflib::operator""_r;
 
-void driveToCentreFrom(float x, float y, float h) {
-    if (!seedPose(x, y, h)) return;
+void routine(gflib::real x, gflib::real y, gflib::real h) {
+    drivetrain.setPose(x, y, h);
 
-    gflib::MoveToPose m(0.0_r, 0.0_r, 0.0_r,
-                        drivetrain.config().lateral, drivetrain.config().angular,
-                        drivetrain.config().lateralExit, drivetrain.config().move);
-    step(m);   // a false return already latched the reason and stopped the drive
+    MotionWindow moving;
+    drivetrain.moveToPoint(-48.0_r, -24.0_r, 2000, 8.0_r);   // chained
+    drivetrain.moveToPoint(-24.0_r, -12.0_r, 2000);          // ends the chain
+    drivetrain.driveDistance(-12.0_r, 1500);
+    drivetrain.turnToHeading(90.0_r, 1200);
+    drivetrain.moveToPose(36.0_r, 24.0_r, 45.0_r, 3000);
 }
 }
 
-void matchLeft()  { driveToCentreFrom(start_position::l_X, start_position::l_Y, start_position::l_H); }
-void matchRight() { driveToCentreFrom(start_position::r_X, start_position::r_Y, start_position::r_H); }
-void skills()     { driveToCentreFrom(start_position::s_X, start_position::s_Y, start_position::s_H); }
+void matchLeft()  { routine(start_position::l_X, start_position::l_Y, start_position::l_H); }
+void matchRight() { routine(start_position::r_X, start_position::r_Y, start_position::r_H); }
+void skills()     { routine(start_position::s_X, start_position::s_Y, start_position::s_H); }
 
 //driver control
 void opcontrol() {
+    drivetrain.clearFault();
     statusHook.setMotionState(gflib::MotionState::Idle);
 
     uint32_t lastDriveMs = pros::millis();

@@ -13,6 +13,15 @@
 
 namespace hal {
 
+struct PoseSnapshot {
+    gflib::Pose pose{};
+    bool healthy = false;
+    uint32_t ageMs = 0;
+};
+
+void publishSnapshot(const PoseSnapshot& s);
+PoseSnapshot readSnapshot();
+
 class V5Clock : public gflib::IClock {
     public:
         uint32_t millisNow() const override;
@@ -82,7 +91,11 @@ class BrainStatusHook : public gflib::IServiceHook {
         // already called source.update() by the time this is entered, so this
         // only decides whether to answer -- it must not update, set a pose or
         // touch Drivetrain
-        void onService() override { send(); }
+
+        void onService() override { send(); publish(); }
+
+        // Copies the current pose and link health into the shared snapshot
+        void publish() const;
 
         // The guarded reply, also called from loops we own ourselves.
         // Returns false when it declined to send or the write was refused

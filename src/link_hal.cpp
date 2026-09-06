@@ -8,12 +8,7 @@ namespace hal {
 uint32_t V5Clock::millisNow() const { return pros::millis(); }
 
 void V5Clock::sleepMs(uint32_t ms) {
-    // 0 is mapped to 1, not passed through. pros::delay(0) reaches
-    // vTaskDelay(0), which FreeRTOS documents as returning immediately
-    // WITHOUT yielding -- so the scheduling courtesy on Drivetrain's overrun
-    // path would become a busy spin, which is the one thing it exists to
-    // prevent. One tick is the smallest delay that actually releases the CPU.
-    pros::delay(ms == 0 ? 1 : ms);
+    pros::delay(ms);
 }
 
 // serial
@@ -70,11 +65,31 @@ void V5Drive::setRight(double volts) {
     right_.move_voltage(toMilliVolts(volts));
 }
 
+// pose snapshot
+
+namespace {
+PoseSnapshot g_snapshot;
+}
+
+void publishSnapshot(const PoseSnapshot& s) { g_snapshot = s; }
+PoseSnapshot readSnapshot() { return g_snapshot; }
+
 // brain status
 
 BrainStatusHook::BrainStatusHook(gflib::LinkPoseSource& source, gflib::IClock& clock,
                                  const V5Drive& drive, uint32_t guardMs)
     : source_(source), clock_(clock), drive_(drive), guardMs_(guardMs) {}
+
+void BrainStatusHook::publish() const {
+    PoseSnapshot s;
+    const uint32_t nowMs = clock_.millisNow();
+
+    s.pose = source_.getPose();
+    s.healthy = source_.healthy(nowMs);
+    s.ageMs = source_.ageMs(nowMs);
+
+    publishSnapshot(s);
+}
 
 bool BrainStatusHook::send() {
     if (!source_.haveReport()) return false;
