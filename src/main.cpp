@@ -133,18 +133,22 @@ void autonomous() {
     statusHook.setMotionState(gflib::MotionState::Idle);
 }
 
-void matchLeft()  {
-    
-    gflib::MoveToPose m(0.0_r, 0.0_r, 0.0_r, drivetrain.config().lateral, drivetrain.config().angular, drivetrain.config().lateralExit, drivetrain.config().move);
+namespace {
+using gflib::operator""_r;
+
+void driveToCentreFrom(float x, float y, float h) {
+    if (!seedPose(x, y, h)) return;
+
+    gflib::MoveToPose m(0.0_r, 0.0_r, 0.0_r,
+                        drivetrain.config().lateral, drivetrain.config().angular,
+                        drivetrain.config().lateralExit, drivetrain.config().move);
+    step(m);   // a false return already latched the reason and stopped the drive
+}
 }
 
-void matchRight() {
-    gflib::MoveToPose m(0.0_r, 0.0_r, 0.0_r, drivetrain.config().lateral, drivetrain.config().angular, drivetrain.config().lateralExit, drivetrain.config().move);
-}
-
-void skills()     {
-    gflib::MoveToPose m(0.0_r, 0.0_r, 0.0_r, drivetrain.config().lateral, drivetrain.config().angular, drivetrain.config().lateralExit, drivetrain.config().move);
-}
+void matchLeft()  { driveToCentreFrom(start_position::l_X, start_position::l_Y, start_position::l_H); }
+void matchRight() { driveToCentreFrom(start_position::r_X, start_position::r_Y, start_position::r_H); }
+void skills()     { driveToCentreFrom(start_position::s_X, start_position::s_Y, start_position::s_H); }
 
 //driver control
 void opcontrol() {
