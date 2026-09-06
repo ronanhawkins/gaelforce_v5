@@ -1,0 +1,3 @@
+[submodule "gflib"]
+	path = src/gflib
+	url = git@github.com:ronanhawkins/glfrclib.git
