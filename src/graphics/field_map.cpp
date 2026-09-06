@@ -28,14 +28,14 @@ namespace map {
         }
     }
 
-    void drawRobot(lemlib::Pose pose) {
+    void drawRobot(const gflib::Pose& pose) {
         int sx, sy;
         fieldToScreen(pose.x, pose.y, sx, sy);
 
         pros::screen::set_pen(pros::Color::red);
         pros::screen::fill_circle(sx, sy, 5);
 
-        double r = pose.theta * M_PI / 180.0;
+        double r = pose.thetaDeg * M_PI / 180.0;
         int hx = sx + (int)(14 * std::sin(r));
         int hy = sy - (int)(14 * std::cos(r));
         pros::screen::draw_line(sx, sy, hx, hy);

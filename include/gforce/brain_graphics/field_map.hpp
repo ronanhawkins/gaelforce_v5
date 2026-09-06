@@ -1,7 +1,7 @@
 #pragma once
-#include "lemlib/api.hpp"   // needed: drawRobot's signature uses lemlib::Pose
+#include "gflib/pose.hpp"   // needed: drawRobot's signature uses gflib::Pose
 
 namespace map {
     void drawField();
-    void drawRobot(lemlib::Pose pose);
+    void drawRobot(const gflib::Pose& pose);
 }
