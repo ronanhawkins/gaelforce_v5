@@ -41,7 +41,7 @@ gflib::LinkPoseSourceConfig makeLinkConfig() {
     // minimum confidence in pose
     c.minConfidence = 0.2_r;
 
-    c.useDeadReckoning = false;
+    c.useDeadReckoning = true;
 
     return c;
 }

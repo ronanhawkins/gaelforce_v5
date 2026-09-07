@@ -25,8 +25,11 @@ namespace start_position {
 namespace {
     volatile bool selectorActive = false;
 
-    // Why the routine stopped, or nullptr.
-    const char* volatile fault = nullptr;
+    // Set once in initialize() and never cleared.
+    const char* volatile initFault = nullptr;
+
+    // Why the last routine stopped, or nullptr.
+    const char* volatile runFault = nullptr;
 
     const char* reasonFor(gflib::MotionStatus st) {
         switch (st) {
@@ -37,10 +40,31 @@ namespace {
         }
     }
 
-    // Running only while the robot is actually driving.
-    struct MotionWindow {
-        MotionWindow()  { statusHook.setMotionState(gflib::MotionState::Running); }
-        ~MotionWindow() { statusHook.setMotionState(gflib::MotionState::Idle); }
+    gflib::MotionState wireState(gflib::MotionStatus st) {
+        switch (st) {
+            case gflib::MotionStatus::Running:       return gflib::MotionState::Running;
+            case gflib::MotionStatus::Settled:       return gflib::MotionState::Settled;
+            // Reaching a chain radius is a real exit, not a failure, and the
+            // wire has no separate word for it.
+            case gflib::MotionStatus::EarlyExit:     return gflib::MotionState::Settled;
+            case gflib::MotionStatus::TimedOut:      return gflib::MotionState::TimedOut;
+            case gflib::MotionStatus::Cancelled:     return gflib::MotionState::Cancelled;
+            case gflib::MotionStatus::PoseUnhealthy: return gflib::MotionState::PoseUnhealthy;
+        }
+        return gflib::MotionState::Idle;
+    }
+
+    // Reports how the routine actually ended.
+    //
+    // Before this the wire only ever moved between Running and Idle, so a
+    // routine that died on a stale pose was indistinguishable from one that
+    // finished. Settled, TimedOut and PoseUnhealthy now reach the pod.
+    struct ReportOnExit {
+        ~ReportOnExit() {
+            statusHook.setMotionState(drivetrain.faulted()
+                                          ? wireState(drivetrain.faultStatus())
+                                          : gflib::MotionState::Idle);
+        }
     };
 }
 
@@ -58,7 +82,7 @@ void initialize() {
 
     // Wait for pose frames to start ariving
     if (!drivetrain.begin(tune::kLinkBeginTimeoutMs)) {
-        fault = "NO POSE FRAMES - check the pod and the RS-485 wiring";
+        initFault = "NO POSE FRAMES - check the pod and the RS-485 wiring";
     }
 
     // thread for brain screen and position logging
@@ -87,9 +111,13 @@ void initialize() {
                                 snap.healthy ? "ok " : "BAD",
                                 static_cast<unsigned long>(snap.ageMs));
 
-            if (fault != nullptr) {
+            if (runFault != nullptr) {
                 pros::screen::set_pen(pros::Color::red);
-                pros::screen::print(pros::E_TEXT_MEDIUM, 6, "%s", fault);
+                pros::screen::print(pros::E_TEXT_MEDIUM, 6, "%s", runFault);
+            }
+            if (initFault != nullptr) {
+                pros::screen::set_pen(pros::Color::red);
+                pros::screen::print(pros::E_TEXT_MEDIUM, 7, "%s", initFault);
             }
             // delay to save resources
             pros::delay(50);
@@ -109,7 +137,9 @@ void competition_initialize() {
 //auton
 void autonomous() {
     drivetrain.clearFault();
-    fault = nullptr;
+
+    // Only this run's message.
+    runFault = nullptr;
 
     switch (mode::selected) {
         case mode::Auton::MATCH_LEFT:  matchLeft();  break;
@@ -127,7 +157,7 @@ void autonomous() {
         if (at == 0) std::snprintf(buf, sizeof(buf), "%s (pose set)", why);
         else         std::snprintf(buf, sizeof(buf), "%s at motion %lu",
                                    why, static_cast<unsigned long>(at));
-        fault = buf;
+        runFault = buf;
     }
 }
 
@@ -135,9 +165,14 @@ namespace {
 using gflib::operator""_r;
 
 void routine(gflib::real x, gflib::real y, gflib::real h) {
+    ReportOnExit reportWhenDone;
+
+    // Parked, waiting for the pod to echo the reset.
+    statusHook.setMotionState(gflib::MotionState::Idle);
     drivetrain.setPose(x, y, h);
 
-    MotionWindow moving;
+    // One Running for the whole driving stretch.
+    statusHook.setMotionState(gflib::MotionState::Running);
     drivetrain.moveToPoint(-48.0_r, -24.0_r, 2000, 8.0_r);   // chained
     drivetrain.moveToPoint(-24.0_r, -12.0_r, 2000);          // ends the chain
     drivetrain.driveDistance(-12.0_r, 1500);
