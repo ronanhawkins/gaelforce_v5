@@ -2,6 +2,8 @@
 
 This is the base program for the Gaelforce UCD VEX U team.
 
+README will be updated soon
+
 ## Project Structure
 
 ```
