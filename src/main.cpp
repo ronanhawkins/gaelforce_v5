@@ -21,6 +21,13 @@ namespace start_position {
     // 0,0,0 is center of field, facing away from driver
 }
 
+namespace display {
+    // Screen only. The link is still checked and a stale pose still stops
+    // auton motions, these just hide the readouts
+    constexpr bool kShowLink = false;          // "LINK: ok/BAD  age" line
+    constexpr bool kShowNoPoseFrames = false;  // "NO POSE FRAMES" error
+}
+
 // pause the screen task while the auton selector is active
 namespace {
     volatile bool selectorActive = false;
@@ -113,18 +120,24 @@ void initialize() {
 
             // Link health, because a stale pose looks exactly like a
             // stationary robot on a map
-            pros::screen::print(pros::E_TEXT_MEDIUM, 4, "LINK: %s  age %lums", 
-                                snap.healthy ? "ok " : "BAD",
-                                static_cast<unsigned long>(snap.ageMs));
+            if (display::kShowLink) {
+                pros::screen::print(pros::E_TEXT_MEDIUM, 4, "LINK: %s  age %lums",
+                                    snap.healthy ? "ok " : "BAD",
+                                    static_cast<unsigned long>(snap.ageMs));
+            }
 
             if (runFault != nullptr) {
                 pros::screen::set_pen(pros::Color::red);
                 pros::screen::print(pros::E_TEXT_MEDIUM, 6, "%s", runFault);
             }
-            if (initFault != nullptr) {
+            if (display::kShowNoPoseFrames && initFault != nullptr) {
                 pros::screen::set_pen(pros::Color::red);
                 pros::screen::print(pros::E_TEXT_MEDIUM, 7, "%s", initFault);
             }
+
+            // Pixel coordinates, left of the map, which starts at x 250
+            pros::screen::set_pen(pros::Color::green);
+            pros::screen::print(pros::E_TEXT_MEDIUM, 5, 215, "Gaelforce");
             // delay to save resources
             pros::delay(50);
         }
