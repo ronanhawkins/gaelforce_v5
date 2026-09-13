@@ -17,6 +17,9 @@ namespace ports {
 	// reversed or they fight
 	constexpr int LIFT_A = 8;
 	constexpr int LIFT_B = -9;
+
+	// Three-wire port
+	constexpr char SOLENOID = 'E';
 }
 
 // controller
@@ -27,6 +30,9 @@ pros::MotorGroup leftMotors({ports::LEFT_FRONT, ports::LEFT_MIDDLE, ports::LEFT_
 pros::MotorGroup rightMotors({ports::RIGHT_FRONT, ports::RIGHT_MIDDLE, ports::RIGHT_BACK}, pros::MotorGearset::blue);
 
 pros::MotorGroup liftMotors({ports::LIFT_A, ports::LIFT_B}, pros::MotorGearset::green);
+
+// Starts retracted
+pros::adi::DigitalOut solenoid(ports::SOLENOID, false);
 
 // LINK TO SENSOR POD
 

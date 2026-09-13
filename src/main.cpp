@@ -232,6 +232,13 @@ void opcontrol() {
             } else {
                 liftMotors.move(0);
             }
+
+            // Latched
+            if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
+                solenoid.set_value(true);
+            } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+                solenoid.set_value(false);
+            }
         }
 
         pros::delay(tune::kServiceMs);
