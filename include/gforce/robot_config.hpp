@@ -7,6 +7,7 @@
 extern pros:: MotorGroup leftMotors;
 extern pros:: MotorGroup rightMotors;
 extern pros::Controller controller;
+extern pros::Motor auxMotor;
 //add other motors here, for example: extern pros::Motor armMotor;
 
 // Rates the link and the control law run at. Separate on purpose, the pod

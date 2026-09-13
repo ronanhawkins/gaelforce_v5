@@ -12,6 +12,9 @@ namespace ports {
 	// RS-485 to the sensor pod. pros::Serial takes the port off the
 	// smart-device protocol entirely, so nothing else may share it.
 	constexpr int RS485 = 7;
+
+	// Placeholder
+	constexpr int AUX = 8;
 }
 
 // controller
@@ -20,6 +23,8 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 // motor groups
 pros::MotorGroup leftMotors({ports::LEFT_FRONT, ports::LEFT_MIDDLE, ports::LEFT_BACK}, pros::MotorGearset::blue);
 pros::MotorGroup rightMotors({ports::RIGHT_FRONT, ports::RIGHT_MIDDLE, ports::RIGHT_BACK}, pros::MotorGearset::blue);
+
+pros::Motor auxMotor(ports::AUX, pros::MotorGearset::green);
 
 // LINK TO SENSOR POD
 

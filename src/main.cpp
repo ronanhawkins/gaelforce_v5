@@ -205,6 +205,15 @@ void opcontrol() {
             int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
             // move the chassis with arcade drive, shaped by gflib's curve
             drivetrain.arcadeCurved(leftY, rightX);
+
+            // Held
+            if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+                auxMotor.move(127);
+            } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+                auxMotor.move(-127);
+            } else {
+                auxMotor.move(0);
+            }
         }
 
         pros::delay(tune::kServiceMs);
