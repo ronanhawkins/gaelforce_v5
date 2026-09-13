@@ -226,11 +226,11 @@ void opcontrol() {
 
             // Held
             if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-                auxMotor.move(127);
+                liftMotors.move(127);
             } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-                auxMotor.move(-127);
+                liftMotors.move(-127);
             } else {
-                auxMotor.move(0);
+                liftMotors.move(0);
             }
         }
 

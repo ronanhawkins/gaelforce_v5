@@ -13,8 +13,10 @@ namespace ports {
 	// smart-device protocol entirely, so nothing else may share it.
 	constexpr int RS485 = 7;
 
-	// Placeholder
-	constexpr int AUX = 8;
+	// Lift. The two motors face each other on the shared lift, so one is
+	// reversed or they fight
+	constexpr int LIFT_A = 8;
+	constexpr int LIFT_B = -9;
 }
 
 // controller
@@ -24,7 +26,7 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::MotorGroup leftMotors({ports::LEFT_FRONT, ports::LEFT_MIDDLE, ports::LEFT_BACK}, pros::MotorGearset::blue);
 pros::MotorGroup rightMotors({ports::RIGHT_FRONT, ports::RIGHT_MIDDLE, ports::RIGHT_BACK}, pros::MotorGearset::blue);
 
-pros::Motor auxMotor(ports::AUX, pros::MotorGearset::green);
+pros::MotorGroup liftMotors({ports::LIFT_A, ports::LIFT_B}, pros::MotorGearset::green);
 
 // LINK TO SENSOR POD
 
