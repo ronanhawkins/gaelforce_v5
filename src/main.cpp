@@ -85,6 +85,12 @@ void initialize() {
         initFault = "NO POSE FRAMES - check the pod and the RS-485 wiring";
     }
 
+    // autonomous() calls initialize() again to retry the link, and each call
+    // used to start another screen task that never stopped.
+    static bool screenStarted = false;
+    if (screenStarted) return;
+    screenStarted = true;
+
     // thread for brain screen and position logging
     pros::Task screenTask([&]() {
         while (true) {
@@ -136,6 +142,15 @@ void competition_initialize() {
 
 //auton
 void autonomous() {
+    // Enabling kills competition_initialize() mid selector, before it can
+    // clear this, which would leave the screen task paused all match.
+    selectorActive = false;
+
+    for (int i = 0; i < 3; ++i) {
+        initialize();
+        pros::delay(50);
+        link::service();
+    }
     drivetrain.clearFault();
 
     // Only this run's message.
@@ -187,6 +202,9 @@ void skills()     { routine(start_position::s_X, start_position::s_Y, start_posi
 
 //driver control
 void opcontrol() {
+    // Same as autonomous(): the selector may have been killed before a tap.
+    selectorActive = false;
+
     drivetrain.clearFault();
     statusHook.setMotionState(gflib::MotionState::Idle);
 
