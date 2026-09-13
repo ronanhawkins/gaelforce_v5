@@ -2,12 +2,12 @@
 #include "gforce/robot_config.hpp"
 
 namespace ports {
-    constexpr int LEFT_FRONT   = 1;
-	constexpr int LEFT_MIDDLE  = 2;
-    constexpr int LEFT_BACK    = 3;
-    constexpr int RIGHT_FRONT  = -4;
-	constexpr int RIGHT_MIDDLE = -5;
-    constexpr int RIGHT_BACK   = -6;
+    constexpr int LEFT_FRONT   = 11;
+	constexpr int LEFT_MIDDLE  = 6;
+    constexpr int LEFT_BACK    = 12;
+    constexpr int RIGHT_FRONT  = 13;
+	constexpr int RIGHT_MIDDLE = 15;
+    constexpr int RIGHT_BACK   = 14;
 
 	// RS-485 to the sensor pod. pros::Serial takes the port off the
 	// smart-device protocol entirely, so nothing else may share it.
