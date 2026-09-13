@@ -9,6 +9,8 @@ extern pros:: MotorGroup rightMotors;
 extern pros::Controller controller;
 extern pros::MotorGroup liftMotors;
 extern pros::adi::DigitalOut solenoid;
+extern pros::MotorGroup intakeMotors;
+extern pros::Motor armMotor;
 //add other motors here, for example: extern pros::Motor armMotor;
 
 // Rates the link and the control law run at. Separate on purpose, the pod

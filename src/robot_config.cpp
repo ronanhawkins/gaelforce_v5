@@ -15,11 +15,17 @@ namespace ports {
 
 	// Lift. The two motors face each other on the shared lift, so one is
 	// reversed or they fight
-	constexpr int LIFT_A = 8;
-	constexpr int LIFT_B = -9;
+	constexpr int LIFT_A = -2;
+	constexpr int LIFT_B = 1;
 
 	// Three-wire port
 	constexpr char SOLENOID = 'E';
+
+	// Intake. The two motors face each other, so one is reversed or they fight
+	constexpr int INTAKE_A = -10;
+	constexpr int INTAKE_B = 9;
+
+	constexpr int ARM = 4;
 }
 
 // controller
@@ -29,10 +35,14 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::MotorGroup leftMotors({ports::LEFT_FRONT, ports::LEFT_MIDDLE, ports::LEFT_BACK}, pros::MotorGearset::blue);
 pros::MotorGroup rightMotors({ports::RIGHT_FRONT, ports::RIGHT_MIDDLE, ports::RIGHT_BACK}, pros::MotorGearset::blue);
 
-pros::MotorGroup liftMotors({ports::LIFT_A, ports::LIFT_B}, pros::MotorGearset::green);
+pros::MotorGroup liftMotors({ports::LIFT_A, ports::LIFT_B}, pros::MotorGearset::red);
 
 // Starts retracted
 pros::adi::DigitalOut solenoid(ports::SOLENOID, false);
+
+pros::MotorGroup intakeMotors({ports::INTAKE_A, ports::INTAKE_B}, pros::MotorGearset::green);
+
+pros::Motor armMotor(ports::ARM, pros::MotorGearset::green);
 
 // LINK TO SENSOR POD
 
