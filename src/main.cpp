@@ -82,16 +82,15 @@ void skills();
 
 // initialize function. This is the first function that runs when the program starts
 void initialize() {
-    // Otherwise the arm drops under its own weight whenever it's released
-    armMotor.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-
     // Every blocking gflib call now services the link between its own ticks,
     // so the pod keeps hearing from us during a motion instead of going quiet
     // for the whole of it
     drivetrain.setServiceHook(&statusHook);
 
     // Wait for pose frames to start ariving
-    if (!drivetrain.begin(tune::kLinkBeginTimeoutMs)) {
+    if (!link::kPodFitted) {
+        initFault = "NO POD FITTED - auton will not drive";
+    } else if (!drivetrain.begin(tune::kLinkBeginTimeoutMs)) {
         initFault = "NO POSE FRAMES - check the pod and the RS-485 wiring";
     }
 
@@ -226,9 +225,6 @@ void opcontrol() {
 
     uint32_t lastDriveMs = pros::millis();
 
-    // Starts off each time driver control begins
-    bool intakeOn = false;
-
     while (true) {
         // The link is polled far faster than the drive is commanded.
         link::service();
@@ -243,35 +239,11 @@ void opcontrol() {
             // move the chassis with arcade drive, shaped by gflib's curve
             drivetrain.arcadeCurved(leftY, rightX);
 
-            // Held
-            if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-                liftMotors.move(127);
-            } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-                liftMotors.move(-127);
-            } else {
-                liftMotors.move(0);
-            }
-
             // Latched
             if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
                 solenoid.set_value(true);
             } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
                 solenoid.set_value(false);
-            }
-
-            // Toggle, new press only, or holding X would flip it every tick
-            if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
-                intakeOn = !intakeOn;
-            }
-            intakeMotors.move(intakeOn ? 127 : 0);
-
-            // Held. Stopping uses the hold brake set in initialize()
-            if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-                armMotor.move(127);
-            } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-                armMotor.move(-127);
-            } else {
-                armMotor.move(0);
             }
         }
 

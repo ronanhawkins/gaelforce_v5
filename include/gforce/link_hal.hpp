@@ -50,6 +50,15 @@ class V5Serial : public gflib::IByteStream {
         pros::Serial serial_;
 };
 
+// Stands in for V5Serial while no pod is fitted. Nothing ever arrives, so the
+// pose source never links: driver control still drives, but every auton
+// motion faults on an unhealthy pose rather than steering on a blank one
+class NullStream : public gflib::IByteStream {
+    public:
+        size_t read(uint8_t*, size_t) override { return 0; }
+        size_t write(const uint8_t*, size_t) override { return 0; }
+};
+
 // Volts in, millivolts out. gflib works in volts because that is what a
 // motion controller can reason about; V5 motors take millivolts.
 class V5Drive : public gflib::IDriveOutput {

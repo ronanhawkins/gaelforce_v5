@@ -2,52 +2,45 @@
 #include "gforce/robot_config.hpp"
 
 namespace ports {
-    constexpr int LEFT_FRONT   = 11;
-	constexpr int LEFT_MIDDLE  = 6;
-    constexpr int LEFT_BACK    = 12;
-    constexpr int RIGHT_FRONT  = 13;
-	constexpr int RIGHT_MIDDLE = 15;
-    constexpr int RIGHT_BACK   = 14;
+	// Drive, five a side. Negative is reversed. Within a side the motors are
+	// geared against each other, so three spin one way and two the other, and
+	// the right side is the mirror of the left
+	constexpr int LEFT_1  = 1;
+	constexpr int LEFT_2  = -2;
+	constexpr int LEFT_3  = 3;
+	constexpr int LEFT_4  = -4;
+	constexpr int LEFT_5  = 5;
 
-	// RS-485 to the sensor pod. pros::Serial takes the port off the
+	constexpr int RIGHT_1 = -6;
+	constexpr int RIGHT_2 = 7;
+	constexpr int RIGHT_3 = -8;
+	constexpr int RIGHT_4 = 9;
+	constexpr int RIGHT_5 = -10;
+
+	// No RS-485 port while the pod is off the robot. When it goes back on it
+	// needs a port of its own: pros::Serial takes the port off the
 	// smart-device protocol entirely, so nothing else may share it.
-	constexpr int RS485 = 7;
-
-	// Lift. The two motors face each other on the shared lift, so one is
-	// reversed or they fight
-	constexpr int LIFT_A = -2;
-	constexpr int LIFT_B = 1;
 
 	// Three-wire port
 	constexpr char SOLENOID = 'E';
-
-	// Intake. The two motors face each other, so one is reversed or they fight
-	constexpr int INTAKE_A = -10;
-	constexpr int INTAKE_B = 9;
-
-	constexpr int ARM = 4;
 }
 
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
-pros::MotorGroup leftMotors({ports::LEFT_FRONT, ports::LEFT_MIDDLE, ports::LEFT_BACK}, pros::MotorGearset::blue);
-pros::MotorGroup rightMotors({ports::RIGHT_FRONT, ports::RIGHT_MIDDLE, ports::RIGHT_BACK}, pros::MotorGearset::blue);
-
-pros::MotorGroup liftMotors({ports::LIFT_A, ports::LIFT_B}, pros::MotorGearset::red);
+pros::MotorGroup leftMotors({ports::LEFT_1, ports::LEFT_2, ports::LEFT_3, ports::LEFT_4, ports::LEFT_5}, pros::MotorGearset::blue);
+pros::MotorGroup rightMotors({ports::RIGHT_1, ports::RIGHT_2, ports::RIGHT_3, ports::RIGHT_4, ports::RIGHT_5}, pros::MotorGearset::blue);
 
 // Starts retracted
 pros::adi::DigitalOut solenoid(ports::SOLENOID, false);
 
-pros::MotorGroup intakeMotors({ports::INTAKE_A, ports::INTAKE_B}, pros::MotorGearset::green);
-
-pros::Motor armMotor(ports::ARM, pros::MotorGearset::green);
-
 // LINK TO SENSOR POD
 
 hal::V5Clock brainClock;
-hal::V5Serial podLink(ports::RS485);
+// hal::V5Serial podLink(ports::RS485) once the pod is back, and flip
+// link::kPodFitted
+hal::NullStream podLink;
 hal::V5Drive driveOutput(leftMotors, rightMotors);
 
 namespace {

@@ -7,10 +7,7 @@
 extern pros:: MotorGroup leftMotors;
 extern pros:: MotorGroup rightMotors;
 extern pros::Controller controller;
-extern pros::MotorGroup liftMotors;
 extern pros::adi::DigitalOut solenoid;
-extern pros::MotorGroup intakeMotors;
-extern pros::Motor armMotor;
 //add other motors here, for example: extern pros::Motor armMotor;
 
 // Rates the link and the control law run at. Separate on purpose, the pod
@@ -40,13 +37,17 @@ namespace tune {
 // references to the ones above it, and they all live in one translation unit
 // so that order is defined rather than a static-init race
 extern hal::V5Clock brainClock;
-extern hal::V5Serial podLink;
+extern hal::NullStream podLink;
 extern hal::V5Drive driveOutput;
 extern gflib::LinkPoseSource poseSource;
 extern gflib::Drivetrain drivetrain;
 extern hal::BrainStatusHook statusHook;
 
 namespace link {
+    // The pod is off the robot for now. With it false, initialize() stops
+    // waiting kLinkBeginTimeoutMs for frames that will never come
+    constexpr bool kPodFitted = false;
+
     // One poll of the link plus a guarded reply. For loops this code owns;
     // Drivetrain does the same thing itself between control ticks
     void service();
